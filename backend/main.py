@@ -1,9 +1,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
 import os
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
@@ -14,23 +13,26 @@ load_dotenv()
 
 app = FastAPI()
 
-# Get port from environment variable
-PORT = int(os.getenv("PORT", "8000"))
+# Define allowed origins
+ALLOWED_ORIGINS = [
+    "https://virtual-assistant-frontend.onrender.com",  # Production frontend
+    "http://localhost:3000",  # Local development frontend
+]
 
 # CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with your frontend URL
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],  # Restrict to only needed methods
+    allow_headers=["Content-Type", "Authorization"],  # Restrict to only needed headers
 )
 
 # Initialize the OpenAI model
 model = ChatOpenAI(
     model_name="gpt-4",
     temperature=0.7,
-    openai_api_key=os.getenv("OPENAI_API_KEY")
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 # Create a conversation memory
@@ -68,4 +70,4 @@ async def chat(message: ChatMessage):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
