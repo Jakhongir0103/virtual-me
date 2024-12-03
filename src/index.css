@@ -4,16 +4,16 @@
 
 :root {
   --font-styrene-b: 'Styrene B', ui-sans-serif, system-ui;
-  --accent-main-100: 240, 10%, 3.9%;
 }
 
 body {
   font-family: var(--font-styrene-b), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  background-color: hsl(var(--accent-main-100));
+  background-color: #ffffff;
 }
 
 .prose {
   max-width: none;
+  font-family: var(--font-styrene-b), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 .prose p {

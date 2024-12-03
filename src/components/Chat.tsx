@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import type { Message, Profile } from '../types';
 import { clsx } from 'clsx';
 import { API_URL } from '../config/api';
+import { useTypewriter } from '../hooks/useTypewriter';
 
 interface ChatProps {
   profile: Profile;
@@ -14,6 +15,13 @@ export function Chat({ profile }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [conversationId] = useState(() => 
+    'chat_' + Math.random().toString(36).substr(2, 9)
+  );
+  
+  // Get the latest assistant message
+  const latestAssistantMessage = messages.filter(m => m.role === 'assistant').slice(-1)[0]?.content || '';
+  const { displayedText, isTyping } = useTypewriter(latestAssistantMessage, 30);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,63 +44,138 @@ export function Chat({ profile }: ChatProps) {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ 
+          message: input,
+          conversation_id: conversationId 
+        }),
       });
-      
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
       const data = await response.json();
       const assistantMessage: Message = { role: 'assistant', content: data.response };
       setMessages(prev => [...prev, assistantMessage]);
+
     } catch (error) {
-      console.error('Error:', error);
+      const errorMessage: Message = { 
+        role: 'assistant', 
+        content: error instanceof Error ? error.message : 'An error occurred'
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-50">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex-1 flex flex-col h-screen bg-[#eeece2]">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.map((message, index) => (
           <div
             key={index}
             className={clsx(
-              'flex items-start space-x-3 p-4 rounded-lg',
-              message.role === 'assistant' ? 'bg-white' : 'bg-blue-50'
+              'flex items-start gap-3',
+              message.role === 'assistant' 
+                ? 'flex-row' 
+                : 'flex-row-reverse justify-start ml-auto'
             )}
           >
-            <img
-              src={profile.image}
-              alt={message.role === 'assistant' ? 'Assistant' : 'User'}
-              className="w-8 h-8 rounded-full"
-            />
-            <div className="flex-1">
-              <ReactMarkdown className="prose max-w-none">
-                {message.content}
+            {message.role === 'assistant' && (
+              <img
+                src={profile.image}
+                alt="Assistant"
+                className="w-6 h-6 rounded-full flex-shrink-0 mt-1"
+              />
+            )}
+            <div
+              className={clsx(
+                'p-3 rounded-2xl font-[var(--font-styrene-b)] max-w-[80%]',
+                message.role === 'assistant' 
+                  ? 'bg-[#eeece2]' 
+                  : 'bg-[#e8e5d8]'
+              )}
+            >
+              <ReactMarkdown className="prose max-w-none prose-sm">
+                {message.role === 'assistant' 
+                  ? (message === messages[messages.length - 1] ? displayedText : message.content)
+                  : message.content
+                }
               </ReactMarkdown>
             </div>
           </div>
         ))}
         {isLoading && (
-          <div className="flex items-center space-x-2 p-4">
-            <div className="animate-pulse">Thinking...</div>
+          <div className="flex items-center gap-3">
+            <img
+              src={profile.image}
+              alt="Assistant"
+              className="w-6 h-6 rounded-full flex-shrink-0"
+            />
+            <div className="p-3 rounded-2xl bg-[#e8e5d8] font-[var(--font-styrene-b)]">
+              <div className="animate-pulse">Thinking...</div>
+            </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t">
+      <div className={clsx(
+        "transition-opacity duration-[2000ms] ease-in-out",
+        messages.length === 0 ? "opacity-100 visible" : "opacity-0 invisible"
+      )}>
+        <div className="px-4 py-2 border-t border-[#e8e5d8] bg-[#eeece2]">
+          <div className="text-sm text-gray-500 mb-2">
+            <span className="font-medium">Try asking:</span>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {["What's your background?", "What are your skills?", "Tell me about your experience"].map((question) => (
+                <button
+                  key={question}
+                  onClick={() => {
+                    const userMessage: Message = { role: 'user', content: question };
+                    setMessages(prev => [...prev, userMessage]);
+                    setIsLoading(true);
+                    
+                    fetch(`${API_URL}/api/chat`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        message: question,
+                        conversation_id: conversationId 
+                      }),
+                    })
+                      .then(response => response.json())
+                      .then(data => {
+                        const assistantMessage: Message = { role: 'assistant', content: data.response };
+                        setMessages(prev => [...prev, assistantMessage]);
+                      })
+                      .catch(error => console.error('Error:', error))
+                      .finally(() => setIsLoading(false));
+                  }}
+                  className="text-[#bd5d3a] hover:text-[#a54d2d] bg-[#e8e5d8] px-3 py-1 rounded-full text-sm"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-4 border-t border-[#e8e5d8] bg-[#eeece2]">
         <div className="flex space-x-4">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Message Jakhongir..."
+            className="flex-1 p-2 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#bd5d3a] font-[var(--font-styrene-b)] text-[#3d3929]"
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            className="bg-[#bd5d3a] text-white p-2 rounded-2xl hover:bg-[#a54d2d] disabled:opacity-50"
           >
             <Send className="w-5 h-5" />
           </button>
