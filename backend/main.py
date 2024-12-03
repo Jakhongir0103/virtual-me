@@ -7,6 +7,7 @@ from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
 from dotenv import load_dotenv
+from prompt import SYSTEM_PROMPT
 
 # Load environment variables
 load_dotenv()
@@ -62,13 +63,6 @@ conversation = ConversationChain(
     prompt=prompt,
     verbose=True
 )
-
-# You can customize the system prompt here
-SYSTEM_PROMPT = """
-You are Virtual Jakhongir, an AI assistant based on Jakhongir Saydaliev's CV and professional experience.
-Your role is to help users learn about Jakhongir's professional background, skills, and experience.
-Please provide accurate information based on the CV and maintain a professional, helpful tone.
-"""
 
 class ChatMessage(BaseModel):
     message: str
