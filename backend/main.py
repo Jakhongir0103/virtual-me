@@ -14,7 +14,7 @@ load_dotenv()
 app = FastAPI()
 
 ALLOWED_ORIGINS = [
-    "https://virtual-assistant-frontend.onrender.com",  # Production frontend
+    "https://virtual-jakhongir.onrender.com",  # Production frontend
     "http://localhost:3000",  # Local development frontend
 ]
 
