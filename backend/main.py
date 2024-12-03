@@ -28,20 +28,38 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],  # Restrict to only needed headers
 )
 
-# Initialize the OpenAI model
+# Initialize the OpenAI model with a proper system message
 model = ChatOpenAI(
     model_name="gpt-4",
     temperature=0.7,
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# Create a conversation memory
-memory = ConversationBufferMemory()
+# Create a conversation memory with the system prompt
+memory = ConversationBufferMemory(
+    return_messages=True,  # Return messages instead of string
+    ai_prefix="Assistant",
+    human_prefix="User"
+)
 
-# Create the conversation chain
+# Define the prompt template with the system message
+prompt = PromptTemplate(
+    input_variables=["history", "input"],
+    template="""
+{system_prompt}
+
+Previous conversation:
+{history}
+
+User: {input}
+Assistant:""".format(system_prompt=SYSTEM_PROMPT, history="{history}", input="{input}")
+)
+
+# Create the conversation chain with the prompt template
 conversation = ConversationChain(
     llm=model,
     memory=memory,
+    prompt=prompt,
     verbose=True
 )
 
@@ -58,16 +76,12 @@ class ChatMessage(BaseModel):
 @app.post("/api/chat")
 async def chat(message: ChatMessage):
     try:
-        # Combine system prompt with user message
-        full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {message.message}\nAssistant:"
-        
-        # Get response from the model
+        # Get response from the model using the conversation chain
         response = conversation.predict(input=message.message)
-        
         return {"response": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT")))
