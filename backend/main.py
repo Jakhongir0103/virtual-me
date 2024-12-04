@@ -8,6 +8,14 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage
 from prompt import SYSTEM_PROMPT
 import uuid
 from typing import List, Dict, Union
+import asyncio
+import logging
+from datetime import datetime
+import httpx
+
+# Add logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -119,6 +127,36 @@ async def clear_conversation(conversation_id: str):
         return {"message": "Conversation history cleared successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Add keep-alive functionality
+async def keep_alive():
+    """
+    Background task to keep the server alive by logging a message every 30 minutes
+    """
+    while True:
+        try:
+            # Make an internal request to the health check endpoint
+            async with httpx.AsyncClient() as client:
+                response = await client.get(f"http://localhost:{os.getenv('PORT')}/health")
+                logger.info(f"Keep-alive ping at {datetime.now().isoformat()} - Status: {response.status_code}")
+            await asyncio.sleep(1800)  # 30 minutes = 1800 seconds
+        except Exception as e:
+            logger.error(f"Error in keep-alive task: {str(e)}")
+            await asyncio.sleep(60)  # Wait a minute before retrying if there's an error
+
+@app.get("/health")
+async def health_check():
+    """
+    Endpoint for health checks
+    """
+    return {"status": "healthy", "timestamp": datetime.now().isoformat()}
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Start the keep-alive task when the application starts
+    """
+    asyncio.create_task(keep_alive())
 
 if __name__ == "__main__":
     import uvicorn
