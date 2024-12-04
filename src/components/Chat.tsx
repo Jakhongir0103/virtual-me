@@ -131,7 +131,7 @@ export function Chat({ profile }: ChatProps) {
           <div className="text-sm text-gray-500 mb-2">
             <span className="font-medium">Try asking:</span>
             <div className="flex flex-wrap gap-2 mt-1">
-              {["What's your background?", "What are your skills?", "Tell me about your experience"].map((question) => (
+              {["What projects have you worked on recently?", "Tell me about yourself.", "What technologies are you familiar with?"].map((question) => (
                 <button
                   key={question}
                   onClick={() => {
