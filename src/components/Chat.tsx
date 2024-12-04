@@ -98,7 +98,17 @@ export function Chat({ profile }: ChatProps) {
               )}
             >
               <ReactMarkdown 
-                className="prose max-w-none prose-sm prose-a:underline prose-a:text-[#bd5d3a] hover:prose-a:text-[#a54d2d]"
+                className="prose max-w-none prose-sm"
+                components={{
+                  a: ({node, ...props}) => (
+                    <a 
+                      {...props} 
+                      className="underline text-[#bd5d3a] hover:text-[#a54d2d]"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    />
+                  ),
+                }}
               >
                 {message.role === 'assistant' 
                   ? (message === messages[messages.length - 1] ? displayedText : message.content)
