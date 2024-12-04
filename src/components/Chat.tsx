@@ -97,7 +97,9 @@ export function Chat({ profile }: ChatProps) {
                   : 'bg-[#e8e5d8]'
               )}
             >
-              <ReactMarkdown className="prose max-w-none prose-sm">
+              <ReactMarkdown 
+                className="prose max-w-none prose-sm prose-a:underline prose-a:text-inherit"
+              >
                 {message.role === 'assistant' 
                   ? (message === messages[messages.length - 1] ? displayedText : message.content)
                   : message.content
