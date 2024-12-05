@@ -192,6 +192,7 @@ export function Chat({ profile }: ChatProps) {
             <Send className="w-5 h-5" />
           </button>
         </div>
+        <p className="text-[10px] text-gray-500 mt-2 italic">*The first message may take up to one minute.</p>
       </form>
     </div>
   );
