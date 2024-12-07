@@ -58,14 +58,14 @@ cd backend
 pip install -r requirements.txt
 ```
 
-4. Create `.env` file in the root directory
+4. Create `.env` file in the [root](.) directory
 
 ```env
 VITE_API_URL=http://localhost:8000
 VITE_PORT=3000
 ```
 
-5. Create `.env` file in the backend directory
+5. Create `.env` file in the [backend](./backend) directory
 
 ```env
 OPENAI_API_KEY=your_openai_api_key
