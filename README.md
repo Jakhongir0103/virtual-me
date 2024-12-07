@@ -123,3 +123,5 @@ Project Link: [https://github.com/Jakhongir0103/virtual-me](https://github.com/J
 ## TODO
 - [ ] Function calling integration with an information about each project/education/experience as a tool
 - [ ] Add animation effect to the profile picture
+- [ ] Connect to MongoDB to store the asked questions (by the community) and responses (of the model)
+- [ ] Add a small note below the input box ~ the conversation (only question/answer) is saved for future improvement of the platform, if you don't want your questions to be saved, please click here.
